@@ -15,10 +15,8 @@ import java.util.logging.Logger;
  * Created by halkeye on 8/27/16.
  */
 @Mojo( name = "coverage", defaultPhase = LifecyclePhase.PROCESS_SOURCES )
-public class CodacyCoverageReporterMojo     extends AbstractMojo
+public class CodacyCoverageReporterMojo extends AbstractMojo
 {
-    private final Logger logger = Logger.getLogger(CodacyCoverageReporterMojo.class.getName());
-
     @Parameter( defaultValue="${env.CODACY_PROJECT_TOKEN}", property = "apiToken", required = true )
     private String apiToken;
 
@@ -30,7 +28,7 @@ public class CodacyCoverageReporterMojo     extends AbstractMojo
         CodacyClient client = new CodacyClient(apiToken);
         CommitService codacyService = new CommitService(client);
 
-        logger.info("Uploading coverage data..." + codacyReportFilename);
+        getLog().info("Uploading coverage data..." + codacyReportFilename);
 
         /*
         coverageService.sendReport(commitUUID, config.language, report) match {
