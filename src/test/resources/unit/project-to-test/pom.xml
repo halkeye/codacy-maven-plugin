@@ -21,9 +21,10 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>com.gavinmogan</groupId>
                 <artifactId>codacy-maven-plugin</artifactId>
                 <configuration>
-                    <codacyReportFilename>target/test-harness/project-to-test/gavin.json</codacyReportFilename>
+                    <codacyReportFilename>../../../../../target/gavin.json</codacyReportFilename>
                 </configuration>
             </plugin>
         </plugins>

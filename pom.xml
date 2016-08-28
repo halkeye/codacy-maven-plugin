@@ -17,7 +17,8 @@
         <java.level>7</java.level>
     </properties>
 
-    <!-- <repositories>
+
+    <repositories>
        <repository>
          <id>sonatype-releases</id>
          <name>Sonatype releases</name>
@@ -29,7 +30,7 @@
          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
        </repository>
      </repositories>
-   -->
+
     <dependencies>
         <dependency>
             <groupId>org.apache.maven</groupId>
@@ -80,6 +81,16 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.codacy</groupId>
+            <artifactId>codacy-api-scala_2.11</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.codacy</groupId>
+            <artifactId>coverage-parser_2.11</artifactId>
+            <version>1.1.4</version>
         </dependency>
     </dependencies>
 
