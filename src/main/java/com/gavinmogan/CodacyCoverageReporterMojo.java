@@ -6,8 +6,10 @@ import com.codacy.api.client.CodacyClient;
 import com.codacy.api.client.RequestResponse;
 import com.codacy.api.client.RequestSuccess;
 import com.codacy.api.helpers.FileHelper;
+import com.codacy.api.helpers.vcs.GitClient;
 import com.codacy.api.service.CoverageServices;
 import com.codacy.parsers.implementation.CoberturaParser;
+import com.google.common.base.Strings;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -43,7 +45,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * your project coverage file name
      */
-    @Parameter( property = "currentCommitUUID", required = true )
+    @Parameter( defaultValue = "", property = "currentCommitUUID", required = true )
     private String currentCommitUUID ;
 
     /**
@@ -75,6 +77,10 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
     @Override
     public void execute() throws MojoFailureException, MojoExecutionException {
+        if (Strings.isNullOrEmpty(currentCommitUUID)) {
+            GitClient gitClient = new GitClient(rootProjectDir);
+            currentCommitUUID = gitClient.latestCommitUuid().get();
+        }
         CodacyClient client = new CodacyClient(
                 scala.Option.apply(codacyApiBaseUrl),
                 scala.Option.apply(apiToken),
