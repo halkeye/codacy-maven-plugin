@@ -1,33 +1,41 @@
 package com.gavinmogan;
 
-import codacy.api.CodacyClient;
-import codacy.api.services.CommitService;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 
 import java.io.File;
-import java.util.logging.Logger;
 
 /**
  * Created by halkeye on 8/27/16.
  */
-@Mojo( name = "coverage", defaultPhase = LifecyclePhase.PROCESS_SOURCES )
+@Mojo( name = "coverage", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class CodacyCoverageReporterMojo extends AbstractMojo
 {
+    @Parameter( defaultValue = "${project}", readonly = true )
+    protected MavenProject project;
+
     @Parameter( defaultValue="${env.CODACY_PROJECT_TOKEN}", property = "apiToken", required = true )
     private String apiToken;
 
-    @Parameter( defaultValue="${project..directory}${File.seperator}codacy-coverage.json", property = "codacyReportFilename", required = true )
-    private String codacyReportFilename;
+    @Parameter( defaultValue="${project.basedir}/codacy-coverage.json", property = "codacyReportFilename", required = true )
+    private File codacyReportFilename;
 
-    public void execute() throws MojoExecutionException
-    {
-        CodacyClient client = new CodacyClient(apiToken);
-        CommitService codacyService = new CommitService(client);
+    @Parameter( defaultValue = "Hello, world." )
+    private String greeting;
 
+    @Override
+    public void execute() throws MojoFailureException, MojoExecutionException {
+        //File basedir = project.getBasedir();
+
+        //CodacyClient client = new CodacyClient(apiToken);
+        //CommitService codacyService = new CommitService(client);
+
+        getLog().info(greeting);
         getLog().info("Uploading coverage data..." + codacyReportFilename);
 
         /*
