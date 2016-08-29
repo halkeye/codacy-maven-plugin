@@ -89,11 +89,6 @@
         </dependency>
         <dependency>
             <groupId>com.codacy</groupId>
-            <artifactId>codacy-api-scala_2.11</artifactId>
-            <version>1.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.codacy</groupId>
             <artifactId>coverage-parser_2.11</artifactId>
             <version>1.1.4</version>
         </dependency>
