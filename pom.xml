@@ -29,6 +29,11 @@
          <name>Sonatype snapshots</name>
          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
        </repository>
+       <repository>
+         <id>typesafe-releases</id>
+         <name>Typesafe releases</name>
+         <url>http://repo.typesafe.com/typesafe/releases/</url>
+       </repository>
      </repositories>
 
     <dependencies>
@@ -81,11 +86,6 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.codacy</groupId>
-            <artifactId>codacy-api-scala_2.11</artifactId>
-            <version>1.0.2</version>
         </dependency>
         <dependency>
             <groupId>com.codacy</groupId>
