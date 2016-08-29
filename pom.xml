@@ -97,6 +97,11 @@
             <artifactId>codacy-coverage-reporter</artifactId>
             <version>1.0.10</version>
         </dependency>
+        <dependency>
+            <groupId>com.typesafe.netty</groupId>
+            <artifactId>netty-http-pipelining</artifactId>
+            <version>1.1.4</version>
+        </dependency>
     </dependencies>
 
     <build>
