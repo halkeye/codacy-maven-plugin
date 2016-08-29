@@ -8,7 +8,8 @@ import com.codacy.api.client.RequestSuccess;
 import com.codacy.api.helpers.FileHelper;
 import com.codacy.api.helpers.vcs.GitClient;
 import com.codacy.api.service.CoverageServices;
-import com.codacy.parsers.implementation.CoberturaParser;
+import com.codacy.parsers.CoverageParserFactory;
+import com.codacy.parsers.util.XML;
 import com.google.common.base.Strings;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -16,6 +17,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import scala.runtime.AbstractFunction1;
 
 import java.io.File;
 import java.net.URL;
@@ -39,7 +41,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * your project language
      */
-    @Parameter( defaultValue="java", property = "language", required = true )
+    @Parameter( defaultValue="JAVA", property = "language", required = true )
     private String language;
 
     /**
@@ -51,7 +53,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * your project coverage file name
      */
-    @Parameter( defaultValue="", property = "coverageReport", required = true )
+    @Parameter( defaultValue="${project.basedir}/jacoco.exec", property = "coverageReport", required = true )
     private File coverageReport;
 
 
@@ -73,37 +75,55 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     @Parameter( defaultValue="${project.basedir}/codacy-coverage.json", property = "codacyReportFilename", required = true )
     private File codacyReportFilename;
 
-    public File getCodacyApiBaseUrl() { return codacyReportFilename; }
-
     @Override
     public void execute() throws MojoFailureException, MojoExecutionException {
         if (Strings.isNullOrEmpty(currentCommitUUID)) {
             GitClient gitClient = new GitClient(rootProjectDir);
             currentCommitUUID = gitClient.latestCommitUuid().get();
         }
-        CodacyClient client = new CodacyClient(
+        final CodacyClient client = new CodacyClient(
                 scala.Option.apply(codacyApiBaseUrl),
                 scala.Option.apply(apiToken),
                 scala.Option.apply(projectToken)
         );
-        CoverageServices coverageServices = new CoverageServices(client);
+        final CoverageServices coverageServices = new CoverageServices(client);
 
         getLog().debug("Project token: " + projectToken);
 
-        getLog().info("Parsing coverage data...");
+        getLog().info("Parsing coverage data... " + coverageReport);
 
-        final CoberturaParser reader = new CoberturaParser(Language.Java(), rootProjectDir, coverageReport);
-        final CoverageReport report = reader.generateReport();
+        XML.loadFile(coverageReport);
+        CoverageParserFactory.withCoverageReport(Language.Java(), rootProjectDir, coverageReport, new AbstractFunction1<CoverageReport, Object>() {
+            public Object apply(CoverageReport report) {
+                /*
+                val transformations = Set(new PathPrefixer(config.prefix))
+                val transformedReport = transformations.foldLeft(report) {
+                    (report, transformation) => transformation.execute(report)
+                }
 
-        FileHelper.writeJsonToFile(codacyReportFilename, report, report.codacyCoverageReportFmt());
+                return transformedReport;
+                */
 
-        getLog().info("Uploading coverage data...");
+                getLog().debug("Saving parsed report to " + codacyReportFilename);
 
-        final RequestResponse<RequestSuccess> requestResponse = coverageServices.sendReport(currentCommitUUID, Language.Java(), report);
-        if (requestResponse.hasError()) {
-            getLog().error("Failed to upload data. Reason: " + requestResponse.message());
-            throw new MojoFailureException("Failed to upload data. Reason: " + requestResponse.message());
-        }
-        getLog().info("Coverage data uploaded. Reason: " + requestResponse.message());
+                getLog().debug(report.toString());
+                FileHelper.writeJsonToFile(codacyReportFilename, report, report.codacyCoverageReportFmt());
+
+                getLog().info("Uploading coverage data...");
+
+                final RequestResponse<RequestSuccess> requestResponse = coverageServices.sendReport(currentCommitUUID, Language.Java(), report);
+                if (requestResponse.hasError()) {
+                    getLog().error("Failed to upload data. Reason: " + requestResponse.message());
+                    throw new RuntimeException("Failed to upload data. Reason: " + requestResponse.message());
+                }
+                getLog().info("Coverage data uploaded. Reason: " + requestResponse.message());
+
+                return null;
+            }
+        });
+        //final CoberturaParser reader = new CoberturaParser(Language.Java(), rootProjectDir, coverageReport);
+        //final JacocoParser reader = new JacocoParser(Language.Java(), rootProjectDir, coverageReport);
+        //final CoverageReport report = reader.generateReport();
+
     }
 }
