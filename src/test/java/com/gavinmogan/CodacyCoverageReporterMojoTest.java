@@ -16,13 +16,26 @@ public class CodacyCoverageReporterMojoTest {
     public MojoRule rule = new MojoRule();
 
     @Test
-    public void testExecute() throws Exception {
-        File pom = PlexusTestCase.getTestFile( "src/test/resources/unit/project-to-test" );
+    public void testJacoco() throws Exception {
+        File pom = PlexusTestCase.getTestFile( "src/test/resources/unit/jacoco" );
         assertNotNull( pom );
         assertTrue( pom.exists() );
 
         CodacyCoverageReporterMojo codacyCoverageReporterMojo = (CodacyCoverageReporterMojo) rule.lookupConfiguredMojo( pom, "coverage" );
         assertNotNull( codacyCoverageReporterMojo );
+        codacyCoverageReporterMojo.setCoverageReport(new File(pom, "jacoco/jacoco.xml"));
+        codacyCoverageReporterMojo.execute();
+    }
+
+    @Test
+    public void testCobertura() throws Exception {
+        File pom = PlexusTestCase.getTestFile( "src/test/resources/unit/cobertura" );
+        assertNotNull( pom );
+        assertTrue( pom.exists() );
+
+        CodacyCoverageReporterMojo codacyCoverageReporterMojo = (CodacyCoverageReporterMojo) rule.lookupConfiguredMojo( pom, "coverage" );
+        assertNotNull( codacyCoverageReporterMojo );
+        codacyCoverageReporterMojo.setCoverageReport(new File(pom, "cobertura/coverage.xml"));
         codacyCoverageReporterMojo.execute();
     }
 

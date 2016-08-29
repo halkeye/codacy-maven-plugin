@@ -92,6 +92,11 @@
             <artifactId>coverage-parser_2.11</artifactId>
             <version>1.1.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.codacy</groupId>
+            <artifactId>codacy-coverage-reporter</artifactId>
+            <version>1.0.10</version>
+        </dependency>
     </dependencies>
 
     <build>

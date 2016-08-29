@@ -9,7 +9,7 @@ import com.codacy.api.helpers.FileHelper;
 import com.codacy.api.helpers.vcs.GitClient;
 import com.codacy.api.service.CoverageServices;
 import com.codacy.parsers.CoverageParserFactory;
-import com.codacy.parsers.util.XML;
+import com.codacy.transformation.PathPrefixer;
 import com.google.common.base.Strings;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -20,7 +20,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import scala.runtime.AbstractFunction1;
 
 import java.io.File;
-import java.net.URL;
 
 @Mojo( name = "coverage", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class CodacyCoverageReporterMojo extends AbstractMojo
@@ -33,9 +32,9 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     private String projectToken;
 
     /**
-     * your project API token
+     * your API token
      */
-    @Parameter( defaultValue="${env.CODACY_PROJECT_TOKEN}", property = "apiToken", required = true )
+    @Parameter( defaultValue="${env.CODACY_API_TOKEN}", property = "apiToken", required = true )
     private String apiToken;
 
     /**
@@ -47,7 +46,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * your project coverage file name
      */
-    @Parameter( defaultValue = "", property = "currentCommitUUID", required = true )
+    @Parameter( defaultValue = "${env.CI_COMMIT}", property = "currentCommitUUID", required = true )
     private String currentCommitUUID ;
 
     /**
@@ -64,7 +63,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
      * the project path prefix
      */
     @Parameter( defaultValue="", property = "prefix", required = true )
-    private URL prefix;
+    private String prefix;
 
     /**
      * the base URL for the Codacy API
@@ -92,7 +91,6 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
         getLog().info("Parsing coverage data... " + coverageReport);
 
-        XML.loadFile(coverageReport);
         CoverageParserFactory.withCoverageReport(Language.Java(), rootProjectDir, coverageReport, new AbstractFunction1<CoverageReport, Object>() {
             public Object apply(CoverageReport report) {
                 /*
@@ -111,6 +109,9 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
                 getLog().info("Uploading coverage data...");
 
+                final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
+                report = pathPrefixer.execute(report);
+
                 final RequestResponse<RequestSuccess> requestResponse = coverageServices.sendReport(currentCommitUUID, Language.Java(), report);
                 if (requestResponse.hasError()) {
                     getLog().error("Failed to upload data. Reason: " + requestResponse.message());
@@ -125,5 +126,9 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
         //final JacocoParser reader = new JacocoParser(Language.Java(), rootProjectDir, coverageReport);
         //final CoverageReport report = reader.generateReport();
 
+    }
+
+    public void setCoverageReport(File coverageReport) {
+        this.coverageReport = coverageReport;
     }
 }
