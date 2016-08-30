@@ -135,7 +135,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
                     httppost.setHeader("project_token", projectToken);
                     httppost.setHeader("Content-Type", "application/json");
 
-                    final String json = StringUtils.join("", FileUtils.readLines(codacyReportFilename, "UTF-8"));
+                    final String json = StringUtils.join(FileUtils.readLines(codacyReportFilename, "UTF-8"), "");
 
                     StringEntity input = new StringEntity(json);
                     input.setContentType("application/json");
