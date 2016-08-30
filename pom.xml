@@ -29,6 +29,11 @@
          <name>Sonatype snapshots</name>
          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
        </repository>
+       <repository>
+         <id>typesafe-releases</id>
+         <name>Typesafe releases</name>
+         <url>http://repo.typesafe.com/typesafe/releases/</url>
+       </repository>
      </repositories>
 
     <dependencies>
@@ -47,11 +52,6 @@
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
             <version>3.0.15</version>
-        </dependency>
-        <dependency>
-            <groupId>com.codacy</groupId>
-            <artifactId>codacy-api-java</artifactId>
-            <version>1.10</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-testing</groupId>
@@ -83,9 +83,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>3.6.3.Final</version>
+        </dependency>
+        <dependency>
             <groupId>com.codacy</groupId>
-            <artifactId>codacy-api-scala_2.11</artifactId>
-            <version>1.0.2</version>
+            <artifactId>codacy-api-java</artifactId>
+            <version>1.10</version>
         </dependency>
         <dependency>
             <groupId>com.codacy</groupId>

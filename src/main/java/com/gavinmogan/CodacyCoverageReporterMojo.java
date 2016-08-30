@@ -3,14 +3,24 @@ package com.gavinmogan;
 import com.codacy.api.CoverageReport;
 import com.codacy.api.Language;
 import com.codacy.api.client.CodacyClient;
-import com.codacy.api.client.RequestResponse;
-import com.codacy.api.client.RequestSuccess;
 import com.codacy.api.helpers.FileHelper;
 import com.codacy.api.helpers.vcs.GitClient;
 import com.codacy.api.service.CoverageServices;
 import com.codacy.parsers.CoverageParserFactory;
 import com.codacy.transformation.PathPrefixer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -20,6 +30,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import scala.runtime.AbstractFunction1;
 
 import java.io.File;
+import java.io.IOException;
 
 @Mojo( name = "coverage", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class CodacyCoverageReporterMojo extends AbstractMojo
@@ -46,8 +57,8 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * your project coverage file name
      */
-    @Parameter( defaultValue = "${env.CI_COMMIT}", property = "currentCommitUUID", required = true )
-    private String currentCommitUUID ;
+    @Parameter( defaultValue = "${env.CI_COMMIT}", property = "commit", required = true )
+    private String commit;
 
     /**
      * your project coverage file name
@@ -74,11 +85,14 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     @Parameter( defaultValue="${project.basedir}/codacy-coverage.json", property = "codacyReportFilename", required = true )
     private File codacyReportFilename;
 
+    private final ObjectMapper mapper = new ObjectMapper();
+
+
     @Override
     public void execute() throws MojoFailureException, MojoExecutionException {
-        if (Strings.isNullOrEmpty(currentCommitUUID)) {
+        if (Strings.isNullOrEmpty(commit)) {
             GitClient gitClient = new GitClient(rootProjectDir);
-            currentCommitUUID = gitClient.latestCommitUuid().get();
+            commit = gitClient.latestCommitUuid().get();
         }
         final CodacyClient client = new CodacyClient(
                 scala.Option.apply(codacyApiBaseUrl),
@@ -109,15 +123,60 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
                 getLog().info("Uploading coverage data...");
 
-                final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
-                report = pathPrefixer.execute(report);
-
-                final RequestResponse<RequestSuccess> requestResponse = coverageServices.sendReport(currentCommitUUID, Language.Java(), report);
-                if (requestResponse.hasError()) {
-                    getLog().error("Failed to upload data. Reason: " + requestResponse.message());
-                    throw new RuntimeException("Failed to upload data. Reason: " + requestResponse.message());
+                if (!Strings.isNullOrEmpty(prefix)) {
+                    final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
+                    report = pathPrefixer.execute(report);
                 }
-                getLog().info("Coverage data uploaded. Reason: " + requestResponse.message());
+
+                CloseableHttpClient httpclient = HttpClients.createDefault();
+                try {
+                    HttpPost httppost = new HttpPost(codacyApiBaseUrl + "/2.0/coverage/" + commit + "/" + language.toLowerCase());
+                    httppost.setHeader("api_token", apiToken);
+                    httppost.setHeader("project_token", projectToken);
+                    httppost.setHeader("Content-Type", "application/json");
+
+                    final String json = StringUtils.join("", FileUtils.readLines(codacyReportFilename, "UTF-8"));
+
+                    StringEntity input = new StringEntity(json);
+                    input.setContentType("application/json");
+                    httppost.setEntity(input);
+
+                    getLog().info("Executing request " + httppost.getRequestLine());
+
+                    // Create a custom response handler
+                    ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
+
+                        @Override
+                        public String handleResponse(final HttpResponse response) throws ClientProtocolException, IOException {
+                            int status = response.getStatusLine().getStatusCode();
+                            if (status >= 200 && status < 300) {
+                                HttpEntity entity = response.getEntity();
+                                return entity != null ? EntityUtils.toString(entity) : null;
+                            } else {
+                                throw new ClientProtocolException("Unexpected response status: " + status);
+                            }
+                        }
+
+                    };
+                    String responseBody = httpclient.execute(httppost, responseHandler);
+                    getLog().info("----------------------------------------");
+                    getLog().info(responseBody);
+
+                    getLog().info("Coverage data uploaded. Reason: " + responseBody);
+
+                } catch (ClientProtocolException e) {
+                    getLog().error("Failed to upload data.", e);
+                    throw new RuntimeException("Failed to upload data. Reason: " + e.getMessage());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        httpclient.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
 
                 return null;
             }
@@ -130,5 +189,37 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
     public void setCoverageReport(File coverageReport) {
         this.coverageReport = coverageReport;
+    }
+
+    public void setProjectToken(String projectToken) {
+        this.projectToken = projectToken;
+    }
+
+    public void setApiToken(String apiToken) {
+        this.apiToken = apiToken;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public void setRootProjectDir(File rootProjectDir) {
+        this.rootProjectDir = rootProjectDir;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    public void setCodacyApiBaseUrl(String codacyApiBaseUrl) {
+        this.codacyApiBaseUrl = codacyApiBaseUrl;
+    }
+
+    public void setCodacyReportFilename(File codacyReportFilename) {
+        this.codacyReportFilename = codacyReportFilename;
+    }
+
+    public void setCommit(String commit) {
+        this.commit = commit;
     }
 }
