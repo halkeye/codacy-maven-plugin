@@ -82,15 +82,17 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-            <version>3.6.3.Final</version>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
         <dependency>
-            <groupId>com.codacy</groupId>
-            <artifactId>codacy-api-java</artifactId>
-            <version>1.10</version>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
         </dependency>
         <dependency>
             <groupId>com.codacy</groupId>
@@ -101,11 +103,6 @@
             <groupId>com.codacy</groupId>
             <artifactId>codacy-coverage-reporter</artifactId>
             <version>1.0.10</version>
-        </dependency>
-        <dependency>
-            <groupId>com.typesafe.netty</groupId>
-            <artifactId>netty-http-pipelining</artifactId>
-            <version>1.1.4</version>
         </dependency>
     </dependencies>
 

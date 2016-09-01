@@ -2,6 +2,7 @@ package com.gavinmogan;
 
 import org.apache.maven.plugin.testing.MojoRule;
 import org.codehaus.plexus.PlexusTestCase;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -11,32 +12,32 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
 public class CodacyCoverageReporterMojoTest {
+    private File pom;
 
     @Rule
     public MojoRule rule = new MojoRule();
 
+    @Before
+    public void setUp() {
+        this.pom = PlexusTestCase.getTestFile( "src/test/resources/unit/project-to-test" );
+        assertNotNull( this.pom );
+        assertTrue( this.pom.exists() );
+    }
+
     @Test
     public void testJacoco() throws Exception {
-        File pom = PlexusTestCase.getTestFile( "src/test/resources/unit/jacoco" );
-        assertNotNull( pom );
-        assertTrue( pom.exists() );
-
-        CodacyCoverageReporterMojo codacyCoverageReporterMojo = (CodacyCoverageReporterMojo) rule.lookupConfiguredMojo( pom, "coverage" );
+        CodacyCoverageReporterMojo codacyCoverageReporterMojo = (CodacyCoverageReporterMojo) rule.lookupConfiguredMojo( this.pom, "coverage" );
         assertNotNull( codacyCoverageReporterMojo );
-        codacyCoverageReporterMojo.setCoverageReport(new File(pom, "jacoco/jacoco.xml"));
+        codacyCoverageReporterMojo.setCoverageReport(new File(this.pom, "jacoco/jacoco.xml"));
         codacyCoverageReporterMojo.execute();
     }
 
     @Test
     public void testCobertura() throws Exception {
-        File pom = PlexusTestCase.getTestFile( "src/test/resources/unit/cobertura" );
-        assertNotNull( pom );
-        assertTrue( pom.exists() );
 
-        CodacyCoverageReporterMojo codacyCoverageReporterMojo = (CodacyCoverageReporterMojo) rule.lookupConfiguredMojo( pom, "coverage" );
+        CodacyCoverageReporterMojo codacyCoverageReporterMojo = (CodacyCoverageReporterMojo) rule.lookupConfiguredMojo( this.pom, "coverage" );
         assertNotNull( codacyCoverageReporterMojo );
         codacyCoverageReporterMojo.setCoverageReport(new File(pom, "cobertura/coverage.xml"));
         codacyCoverageReporterMojo.execute();
     }
-
 }
