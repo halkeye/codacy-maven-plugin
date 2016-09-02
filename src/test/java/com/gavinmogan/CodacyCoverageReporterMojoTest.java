@@ -49,7 +49,6 @@ public class CodacyCoverageReporterMojoTest {
 
         codacyCoverageReporterMojo.setCoverageReportFile(new File(pom, "jacoco/jacoco.xml"));
         codacyCoverageReporterMojo.execute();
-        assertTrue("Made it to the end", true); // most asserts are done earlier, but codacy complains
     }
 
     @Test
@@ -59,7 +58,6 @@ public class CodacyCoverageReporterMojoTest {
 
         codacyCoverageReporterMojo.setCoverageReportFile(new File(pom, "cobertura/coverage.xml"));
         codacyCoverageReporterMojo.execute();
-        assertTrue("Made it to the end", true); // most asserts are done earlier, but codacy complains
     }
 
     private void setupMockServer(String body) {

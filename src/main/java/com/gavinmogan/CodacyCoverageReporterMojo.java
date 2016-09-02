@@ -7,7 +7,6 @@ import com.codacy.parsers.XMLCoverageParser;
 import com.codacy.parsers.implementation.CoberturaParser;
 import com.codacy.parsers.implementation.JacocoParser;
 import com.codacy.transformation.PathPrefixer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
