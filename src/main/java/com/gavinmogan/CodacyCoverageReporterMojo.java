@@ -51,7 +51,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * your project language
      */
-    @Parameter( defaultValue="JAVA", property = "language", required = true )
+    @Parameter( defaultValue="Java", property = "language", required = true )
     private String language;
 
     /**
@@ -104,11 +104,13 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
             commit = gitClient.latestCommitUuid().get();
         }
 
+        Enumeration.Value lang = Language.withName(language);
+
         getLog().debug("Project token: " + projectToken);
 
         getLog().info("Parsing coverage data... " + coverageReportFile);
 
-        CoverageReport report = processReport(Language.Java(), rootProjectDir, coverageReportFile);
+        CoverageReport report = processReport(lang, rootProjectDir, coverageReportFile);
 
         if (!Strings.isNullOrEmpty(prefix)) {
             final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
