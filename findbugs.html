@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>codacy-maven-plugin Maven Plugin - Developer Activity Report</title>
+    <title>codacy-maven-plugin Maven Plugin - FindBugs Bug Detector Report</title>
     <style type="text/css" media="all">
       @import url("./css/maven-base.css");
       @import url("./css/maven-theme.css");
@@ -51,8 +51,8 @@
                           <a href="project-reports.html" title="Project Reports">Project Reports</a>
                     <ul>
                       <li class="none">
-                          <a href="findbugs.html" title="FindBugs">FindBugs</a>
-            </li>
+            <strong>FindBugs</strong>
+          </li>
                       <li class="none">
                           <a href="apidocs/index.html" title="JavaDocs">JavaDocs</a>
             </li>
@@ -66,8 +66,8 @@
                           <a href="file-activity.html" title="File Activity">File Activity</a>
             </li>
                       <li class="none">
-            <strong>Developer Activity</strong>
-          </li>
+                          <a href="dev-activity.html" title="Developer Activity">Developer Activity</a>
+            </li>
               </ul>
         </li>
           </ul>
@@ -81,23 +81,66 @@
     <div id="bodyColumn">
       <div id="contentBox">
         <div class="section">
-<h2>Developer Activity Report<a name="Developer_Activity_Report"></a></h2>
+<h2>FindBugs Bug Detector Report<a name="FindBugs_Bug_Detector_Report"></a></h2>
+<p>The following document contains the results of <a class="externalLink" href="http://findbugs.sourceforge.net">FindBugs</a></p>
+<p>FindBugs Version is <i>3.0.1</i></p>
+<p>Threshold is <i>medium</i></p>
+<p>Effort is <i>min</i></p></div>
 <div class="section">
-<h3>Changes between 2016-08-02 and 2016-09-02<a name="Changes_between_2016-08-02_and_2016-09-02"></a></h3>
-<p>Total commits: 13<br />Total number of files changed: 22</p>
+<h2>Summary<a name="Summary"></a></h2>
 <table border="0" class="bodyTable">
 <tr class="a">
-<th>Developer</th>
-<th>Total commits</th>
-<th>Total Number of Files Changed</th></tr>
+<th>Classes</th>
+<th>Bugs</th>
+<th>Errors</th>
+<th>Missing Classes</th></tr>
 <tr class="b">
-<td>Gavin Mogan &lt;gavin@gavinmogan.com&gt;</td>
 <td>3</td>
-<td>12</td></tr>
+<td>2</td>
+<td>0</td>
+<td>0</td></tr></table></div>
+<div class="section">
+<h2>Files<a name="Files"></a></h2>
+<table border="0" class="bodyTable">
 <tr class="a">
-<td>Gavin Mogan &lt;git@gavinmogan.com&gt;</td>
-<td>10</td>
-<td>16</td></tr></table></div></div>
+<th>Class</th>
+<th>Bugs</th></tr>
+<tr class="b">
+<td><a href="#com.gavinmogan.CodacyCoverageReporterMojo">com.gavinmogan.CodacyCoverageReporterMojo</a></td>
+<td>1</td></tr>
+<tr class="a">
+<td><a href="#com.gavinmogan.CodacyCoverageReporterMojo$RuntimeMojoFailureException">com.gavinmogan.CodacyCoverageReporterMojo$RuntimeMojoFailureException</a></td>
+<td>1</td></tr></table></div><a name="com.gavinmogan.CodacyCoverageReporterMojo"></a>
+<div class="section">
+<h3>com.gavinmogan.CodacyCoverageReporterMojo<a name="com.gavinmogan.CodacyCoverageReporterMojo"></a></h3>
+<table border="0" class="bodyTable">
+<tr class="b">
+<th>Bug</th>
+<th>Category</th>
+<th>Details</th>
+<th>Line</th>
+<th>Priority</th></tr>
+<tr class="a">
+<td>Unread field: com.gavinmogan.CodacyCoverageReporterMojo.codacyReportFilename</td>
+<td>PERFORMANCE</td>
+<td><a class="externalLink" href="http://findbugs.sourceforge.net/bugDescriptions.html#URF_UNREAD_FIELD">URF_UNREAD_FIELD</a></td>
+<td>228</td>
+<td>Medium</td></tr></table></div><a name="com.gavinmogan.CodacyCoverageReporterMojoRuntimeMojoFailureException"></a>
+<div class="section">
+<h3>com.gavinmogan.CodacyCoverageReporterMojo$RuntimeMojoFailureException<a name="com.gavinmogan.CodacyCoverageReporterMojoRuntimeMojoFailureException"></a></h3>
+<table border="0" class="bodyTable">
+<tr class="b">
+<th>Bug</th>
+<th>Category</th>
+<th>Details</th>
+<th>Line</th>
+<th>Priority</th></tr>
+<tr class="a">
+<td>Should com.gavinmogan.CodacyCoverageReporterMojo$RuntimeMojoFailureException be a _static_ inner class?</td>
+<td>PERFORMANCE</td>
+<td><a class="externalLink" href="http://findbugs.sourceforge.net/bugDescriptions.html#SIC_INNER_SHOULD_BE_STATIC">SIC_INNER_SHOULD_BE_STATIC</a></td>
+<td>91</td>
+<td>Medium</td></tr></table></div>
       </div>
     </div>
     <div class="clear">
