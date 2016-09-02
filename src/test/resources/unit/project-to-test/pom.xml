@@ -24,7 +24,6 @@
                 <groupId>com.gavinmogan</groupId>
                 <artifactId>codacy-maven-plugin</artifactId>
                 <configuration>
-                    <codacyReportFilename>../../../../../target/gavin.json</codacyReportFilename>
                     <coverageReportFile>cobertura/coverage.xml</coverageReportFile>
                 </configuration>
             </plugin>

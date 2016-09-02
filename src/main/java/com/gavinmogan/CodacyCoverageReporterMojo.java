@@ -82,9 +82,6 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     @Parameter( defaultValue="https://api.codacy.com", property = "codacyApiBaseUrl", required = true )
     private String codacyApiBaseUrl;
 
-    @Parameter( defaultValue="${project.basedir}/codacy-coverage.json", property = "codacyReportFilename", required = true )
-    private File codacyReportFilename;
-
     private final ObjectMapper mapper = new ObjectMapper();
 
     class RuntimeMojoFailureException extends RuntimeException {
@@ -224,10 +221,6 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
     public void setCodacyApiBaseUrl(String codacyApiBaseUrl) {
         this.codacyApiBaseUrl = codacyApiBaseUrl;
-    }
-
-    public void setCodacyReportFilename(File codacyReportFilename) {
-        this.codacyReportFilename = codacyReportFilename;
     }
 
     public void setCommit(String commit) {
