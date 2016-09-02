@@ -4,7 +4,7 @@
 
     <groupId>com.gavinmogan</groupId>
     <artifactId>codacy-maven-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>codacy-maven-plugin Maven Plugin</name>
@@ -52,10 +52,6 @@
     </developers>
 
     <distributionManagement>
-        <site>
-            <id>github</id>
-            <url>gitsite:git@github.com/halkeye/codacy-maven-plugin.git</url>
-        </site>
         <snapshotRepository>
             <id>ossrh</id>
             <name>Nexus Release Repository</name>
