@@ -9,7 +9,7 @@
 
     <name>codacy-maven-plugin Maven Plugin</name>
 
-    <url>https://www.codacy.com</url>
+    <url>https://github.com/halkeye/codacy-maven-plugin</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,6 +31,12 @@
         </developer>
     </developers>
 
+    <distributionManagement>
+        <site>
+            <id>github</id>
+            <url>gitsite:git@github.com/halkeye/codacy-maven-plugin.git</url>
+        </site>
+    </distributionManagement>
 
     <repositories>
        <repository>
@@ -198,6 +204,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-changelog-plugin</artifactId>
                 <version>2.3</version>
+                <!--
                 <configuration>
                     <type>tag</type>
                     <tags>
@@ -205,6 +212,7 @@
                         <tag implementation="java.lang.String">3.6.0</tag>
                     </tags>
                 </configuration>
+                -->
             </plugin>
         </plugins>
     </reporting>
