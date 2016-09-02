@@ -17,6 +17,20 @@
         <java.level>7</java.level>
     </properties>
 
+    <scm>
+        <connection>scm:git:git://github.com/halkeye/codacy-maven-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:halkeye/codacy-maven-plugin.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>halkeye</id>
+            <name>Gavin Mogan</name>
+            <email>maven@gavinmogan.com</email>
+        </developer>
+    </developers>
+
 
     <repositories>
        <repository>
