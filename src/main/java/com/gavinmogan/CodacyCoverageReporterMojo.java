@@ -156,7 +156,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
         }
     }
 
-    static Class[] parsers = new Class[] { CoberturaParser.class, JacocoParser.class };
+    private static Class[] parsers = new Class[] { CoberturaParser.class, JacocoParser.class };
 
     /**
      * Given a report file, find the parser that works for this
