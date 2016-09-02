@@ -2,14 +2,13 @@ package com.gavinmogan;
 
 import com.codacy.api.CoverageReport;
 import com.codacy.api.Language;
-import com.codacy.api.helpers.FileHelper;
 import com.codacy.api.helpers.vcs.GitClient;
-import com.codacy.parsers.CoverageParserFactory;
+import com.codacy.parsers.XMLCoverageParser;
+import com.codacy.parsers.implementation.CoberturaParser;
+import com.codacy.parsers.implementation.JacocoParser;
 import com.codacy.transformation.PathPrefixer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -25,10 +24,13 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import scala.runtime.AbstractFunction1;
+import play.api.libs.json.Json;
+import scala.Enumeration;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 @Mojo( name = "coverage", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class CodacyCoverageReporterMojo extends AbstractMojo
@@ -61,8 +63,8 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * your project coverage file name
      */
-    @Parameter( defaultValue="", property = "coverageReport", required = true )
-    private File coverageReport;
+    @Parameter( defaultValue="", property = "coverageReportFile", required = true )
+    private File coverageReportFile;
 
 
     @Parameter( defaultValue="${project.basedir}", property = "rootProjectDir", required = true )
@@ -104,75 +106,98 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
         getLog().debug("Project token: " + projectToken);
 
-        getLog().info("Parsing coverage data... " + coverageReport);
+        getLog().info("Parsing coverage data... " + coverageReportFile);
+
+        CoverageReport report = processReport(Language.Java(), rootProjectDir, coverageReportFile);
+
+        if (!Strings.isNullOrEmpty(prefix)) {
+            final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
+            report = pathPrefixer.execute(report);
+        }
 
         try {
-            CoverageParserFactory.withCoverageReport(Language.Java(), rootProjectDir, coverageReport, new AbstractFunction1<CoverageReport, Object>() {
-                public Object apply(CoverageReport report) {
-                    if (!Strings.isNullOrEmpty(prefix)) {
-                        final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
-                        report = pathPrefixer.execute(report);
-                    }
-
-                    getLog().debug("Saving parsed report to " + codacyReportFilename);
-                    FileHelper.writeJsonToFile(codacyReportFilename, report, CoverageReport.codacyCoverageReportFmt());
-
-                    getLog().info("Uploading coverage data...");
-                    CloseableHttpClient httpclient = HttpClients.createDefault();
-                    try {
-                        String responseBody = postReport(httpclient);
-                        getLog().info("Coverage data uploaded");
-                    } catch (IOException e) {
-                        getLog().error("Failed to upload data.", e);
-                        throw new RuntimeMojoFailureException(e.getMessage(), e);
-                    } finally {
-                        try {
-                            httpclient.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    return null;
-                }
-            });
-        } catch (RuntimeMojoFailureException e) {
+            getLog().info("Uploading coverage data...");
+            postReport(report);
+            getLog().info("Coverage data uploaded");
+        } catch (IOException e) {
+            getLog().error("Failed to upload data.", e);
             throw new MojoFailureException("Failed to upload data. Reason: " + e.getMessage(), e);
         }
     }
 
-    private String postReport(CloseableHttpClient httpclient) throws IOException {
-        HttpPost httppost = new HttpPost(codacyApiBaseUrl + "/2.0/coverage/" + commit + "/" + language.toLowerCase());
-        httppost.setHeader("api_token", apiToken);
-        httppost.setHeader("project_token", projectToken);
-        httppost.setHeader("Content-Type", "application/json");
+    public String postReport(CoverageReport report) throws IOException {
+        CloseableHttpClient httpclient = HttpClients.createDefault();
 
-        final String json = StringUtils.join(FileUtils.readLines(codacyReportFilename, "UTF-8"), "");
+        try {
+            HttpPost httppost = new HttpPost(codacyApiBaseUrl + "/2.0/coverage/" + commit + "/" + language.toLowerCase());
+            httppost.setHeader("api_token", apiToken);
+            httppost.setHeader("project_token", projectToken);
+            httppost.setHeader("Content-Type", "application/json");
 
-        StringEntity input = new StringEntity(json);
-        input.setContentType("application/json");
-        httppost.setEntity(input);
+            final String json = Json.toJson(report, CoverageReport.codacyCoverageReportFmt()).toString();
 
-        // Create a custom response handler
-        ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
+            StringEntity input = new StringEntity(json);
+            input.setContentType("application/json");
+            httppost.setEntity(input);
 
-            @Override
-            public String handleResponse(final HttpResponse response) throws IOException {
-                int status = response.getStatusLine().getStatusCode();
-                if (status >= 200 && status < 300) {
-                    HttpEntity entity = response.getEntity();
-                    return entity != null ? EntityUtils.toString(entity) : null;
-                } else {
-                    throw new ClientProtocolException("Unexpected response status: " + status);
+            // Create a custom response handler
+            ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
+
+                @Override
+                public String handleResponse(final HttpResponse response) throws IOException {
+                    int status = response.getStatusLine().getStatusCode();
+                    if (status >= 200 && status < 300) {
+                        HttpEntity entity = response.getEntity();
+                        return entity != null ? EntityUtils.toString(entity) : null;
+                    } else {
+                        throw new ClientProtocolException("Unexpected response status: " + status);
+                    }
                 }
-            }
 
-        };
-        return httpclient.execute(httppost, responseHandler);
+            };
+            return httpclient.execute(httppost, responseHandler);
+        } finally {
+            try {
+                httpclient.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void setCoverageReport(File coverageReport) {
-        this.coverageReport = coverageReport;
+    static Class[] parsers = new Class[] { CoberturaParser.class, JacocoParser.class };
+
+    /**
+     * Given a report file, find the parser that works for this
+     *
+     * @param language What language is this?
+     * @param rootProject Where is the project located
+     * @param reportFile Where is the coverage report file
+     * @return Completed report, or null if nothing matches
+     */
+    public static CoverageReport processReport(Enumeration.Value language, File rootProject, File reportFile) {
+
+        for (Class clazz : parsers) {
+            try {
+                Constructor con = clazz.getConstructor(Enumeration.Value.class, File.class, File.class);
+                XMLCoverageParser parser = (XMLCoverageParser) con.newInstance(language, rootProject, reportFile);
+
+                if (parser == null) { continue; }
+
+                if (parser.isValidReport()) {
+                    return parser.generateReport();
+                }
+            } catch (NoSuchMethodException e) {
+            } catch (InstantiationException e) {
+            } catch (IllegalAccessException e) {
+            } catch (InvocationTargetException e) {
+            }
+        }
+        return null;
+    }
+
+    public void setCoverageReportFile(File coverageReportFile) {
+        this.coverageReportFile = coverageReportFile;
     }
 
     public void setProjectToken(String projectToken) {
