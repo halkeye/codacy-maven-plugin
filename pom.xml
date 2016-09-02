@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.gavinmogan</groupId>
@@ -8,6 +8,7 @@
     <packaging>maven-plugin</packaging>
 
     <name>codacy-maven-plugin Maven Plugin</name>
+    <description>Maven goal to upload coverage reports to codacy.com</description>
 
     <url>https://github.com/halkeye/codacy-maven-plugin</url>
 
@@ -15,19 +16,38 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-api.version>3.3.9</maven-api.version>
         <java.level>7</java.level>
+        <github.global.server>github</github.global.server>
     </properties>
 
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <scm>
-        <connection>scm:git:git://github.com/halkeye/codacy-maven-plugin.git</connection>
+        <url>https://github.com/halkeye/codacy-maven-plugin</url>
+        <connection>scm:git:https://github.com/halkeye/codacy-maven-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:halkeye/codacy-maven-plugin.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/halkeye/codacy-maven-plugin/issue</url>
+    </issueManagement>
+    <ciManagement>
+        <system>travisci</system>
+        <url>https://travis-ci.org/halkeye/codacy-maven-plugin</url>
+    </ciManagement>
 
     <developers>
         <developer>
             <id>halkeye</id>
             <name>Gavin Mogan</name>
             <email>maven@gavinmogan.com</email>
+            <url>https://gavinmogan.com</url>
         </developer>
     </developers>
 
@@ -39,22 +59,22 @@
     </distributionManagement>
 
     <repositories>
-       <repository>
-         <id>sonatype-releases</id>
-         <name>Sonatype releases</name>
-         <url>https://oss.sonatype.org/content/repositories/releases/</url>
-       </repository>
-       <repository>
-         <id>sonatype-snapshots</id>
-         <name>Sonatype snapshots</name>
-         <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-       </repository>
-       <repository>
-         <id>typesafe-releases</id>
-         <name>Typesafe releases</name>
-         <url>http://repo.typesafe.com/typesafe/releases/</url>
-       </repository>
-     </repositories>
+        <repository>
+            <id>sonatype-releases</id>
+            <name>Sonatype releases</name>
+            <url>https://oss.sonatype.org/content/repositories/releases/</url>
+        </repository>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <name>Sonatype snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>typesafe-releases</id>
+            <name>Typesafe releases</name>
+            <url>http://repo.typesafe.com/typesafe/releases/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -133,21 +153,6 @@
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <version>3.3</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>com.github.stephenc.wagon</groupId>
-                            <artifactId>wagon-gitsite</artifactId>
-                            <version>0.4.1</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
@@ -188,18 +193,84 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <version>0.12</version>
+                <configuration>
+                    <message>Creating site for ${project.version}</message>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>site</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.7.201606060606</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh</artifactId>
-                <version>1.0-beta-7</version>
-            </extension>
-        </extensions>
     </build>
 
     <reporting>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.4</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <configuration>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-changelog-plugin</artifactId>
