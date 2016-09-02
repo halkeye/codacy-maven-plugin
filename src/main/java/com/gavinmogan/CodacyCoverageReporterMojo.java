@@ -82,14 +82,6 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     @Parameter( defaultValue="https://api.codacy.com", property = "codacyApiBaseUrl", required = true )
     private String codacyApiBaseUrl;
 
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    class RuntimeMojoFailureException extends RuntimeException {
-        public RuntimeMojoFailureException(String message, Throwable e) {
-            super(message, e);
-        }
-    }
-
     @Override
     public void execute() throws MojoFailureException, MojoExecutionException {
         /* TODO
