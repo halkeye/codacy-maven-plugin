@@ -79,7 +79,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * the base URL for the Codacy API
      */
-    @Parameter( defaultValue="https://api.codacy.com", property = "codacyApiBaseUrl", required = true )
+    @Parameter( defaultValue="${env.CODACY_API_BASE_URL}", property = "codacyApiBaseUrl", required = true )
     private String codacyApiBaseUrl;
 
     @Override
@@ -95,6 +95,10 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
         if (Strings.isNullOrEmpty(commit)) {
             GitClient gitClient = new GitClient(rootProjectDir);
             commit = gitClient.latestCommitUuid().get();
+        }
+
+        if (Strings.isNullOrEmpty(codacyApiBaseUrl)) {
+            codacyApiBaseUrl = "https://api.codacy.com";
         }
 
         Enumeration.Value lang = Language.withName(language);
