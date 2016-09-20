@@ -34,6 +34,7 @@ import java.lang.reflect.InvocationTargetException;
 @Mojo( name = "coverage", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class CodacyCoverageReporterMojo extends AbstractMojo
 {
+    private static Class[] parsers = new Class[] { CoberturaParser.class, JacocoParser.class };
 
     /**
      * your project API token
@@ -83,6 +84,10 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
     @Override
     public void execute() throws MojoFailureException, MojoExecutionException {
+        if (!coverageReportFile.exists()) {
+            throw new MojoFailureException("Report file does not exist");
+        }
+
         /* TODO
          * loop through ${project.basedir}/target/jacoco/jacoco.xml and ${project.basedir}/target/cobertura/coverage.xml
          * to see which one is available by default?
@@ -154,8 +159,6 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
             }
         }
     }
-
-    private static Class[] parsers = new Class[] { CoberturaParser.class, JacocoParser.class };
 
     /**
      * Given a report file, find the parser that works for this
