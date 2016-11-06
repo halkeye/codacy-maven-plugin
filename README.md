@@ -13,6 +13,13 @@ where:
 * *apiToken* is your api token
 *
 
+**Enterprise**
+
+To send coverage in the enterprise version you should:
+```
+export CODACY_API_BASE_URL=<Codacy_instance_URL>:16006
+```
+
 ## License
 
 MIT
