@@ -79,7 +79,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * the base URL for the Codacy API
      */
-    @Parameter( defaultValue="${env.CODACY_API_BASE_URL}", property = "codacyApiBaseUrl", required = true )
+    @Parameter( defaultValue="${env.CODACY_API_BASE_URL}", property = "codacyApiBaseUrl", required = false )
     private String codacyApiBaseUrl;
 
     @Override
