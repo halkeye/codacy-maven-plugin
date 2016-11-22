@@ -3,7 +3,7 @@
 
     <groupId>com.gavinmogan</groupId>
     <artifactId>codacy-maven-plugin</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3</version>
     <packaging>maven-plugin</packaging>
 
     <name>codacy-maven-plugin Maven Plugin</name>
@@ -30,7 +30,7 @@
         <url>https://github.com/halkeye/codacy-maven-plugin</url>
         <connection>scm:git:https://github.com/halkeye/codacy-maven-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:halkeye/codacy-maven-plugin.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>codacy-maven-plugin-1.0.3</tag>
     </scm>
     <issueManagement>
         <system>github</system>
