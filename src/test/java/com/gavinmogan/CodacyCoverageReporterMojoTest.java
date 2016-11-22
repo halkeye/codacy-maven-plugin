@@ -1,5 +1,6 @@
 package com.gavinmogan;
 
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.codehaus.plexus.PlexusTestCase;
 import org.junit.Before;
@@ -57,6 +58,26 @@ public class CodacyCoverageReporterMojoTest {
         setupMockServer(body);
 
         codacyCoverageReporterMojo.setCoverageReportFile(new File(pom, "cobertura/coverage.xml"));
+        codacyCoverageReporterMojo.execute();
+    }
+
+    @Test
+    public void testCoberturaNotExistFailingOkay() throws Exception {
+        String body = "{\"language\":\"Java\",\"total\":25,\"fileReports\":[{\"filename\":\"com/gavinmogan/CodacyCoverageReporterMojo.java\",\"total\":81,\"coverage\":{\"205\":2,\"113\":2,\"120\":2,\"153\":1,\"158\":2,\"182\":3,\"216\":2,\"124\":1,\"164\":4,\"135\":2,\"121\":1,\"88\":2,\"141\":2,\"139\":2,\"132\":2,\"201\":4,\"212\":2,\"224\":4,\"134\":2,\"123\":1,\"107\":2,\"217\":2,\"209\":2,\"233\":2,\"144\":4,\"228\":2,\"188\":2,\"148\":2,\"213\":2,\"185\":3,\"137\":2,\"126\":1,\"36\":2,\"140\":2,\"180\":3,\"208\":2,\"133\":2,\"122\":1,\"111\":2,\"102\":2,\"151\":1,\"225\":4,\"109\":2,\"149\":2,\"160\":1,\"187\":3,\"125\":1,\"194\":1,\"183\":3,\"129\":2,\"168\":1,\"232\":2,\"150\":1,\"204\":2,\"229\":2,\"200\":4,\"119\":2,\"161\":2}}]}";
+        setupMockServer(body);
+
+        codacyCoverageReporterMojo.setCoverageReportFile(new File(pom, "cobertura/coverage-not-exist.xml"));
+        codacyCoverageReporterMojo.setFailOnMissingReportFile(false);
+        codacyCoverageReporterMojo.execute();
+    }
+
+    @Test(expected=MojoFailureException.class)
+    public void testCoberturaNotExistFailingNotOkay() throws Exception {
+        String body = "{\"language\":\"Java\",\"total\":25,\"fileReports\":[{\"filename\":\"com/gavinmogan/CodacyCoverageReporterMojo.java\",\"total\":81,\"coverage\":{\"205\":2,\"113\":2,\"120\":2,\"153\":1,\"158\":2,\"182\":3,\"216\":2,\"124\":1,\"164\":4,\"135\":2,\"121\":1,\"88\":2,\"141\":2,\"139\":2,\"132\":2,\"201\":4,\"212\":2,\"224\":4,\"134\":2,\"123\":1,\"107\":2,\"217\":2,\"209\":2,\"233\":2,\"144\":4,\"228\":2,\"188\":2,\"148\":2,\"213\":2,\"185\":3,\"137\":2,\"126\":1,\"36\":2,\"140\":2,\"180\":3,\"208\":2,\"133\":2,\"122\":1,\"111\":2,\"102\":2,\"151\":1,\"225\":4,\"109\":2,\"149\":2,\"160\":1,\"187\":3,\"125\":1,\"194\":1,\"183\":3,\"129\":2,\"168\":1,\"232\":2,\"150\":1,\"204\":2,\"229\":2,\"200\":4,\"119\":2,\"161\":2}}]}";
+        setupMockServer(body);
+
+        codacyCoverageReporterMojo.setCoverageReportFile(new File(pom, "cobertura/coverage-not-exist.xml"));
+        codacyCoverageReporterMojo.setFailOnMissingReportFile(true);
         codacyCoverageReporterMojo.execute();
     }
 
