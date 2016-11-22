@@ -81,11 +81,22 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
      */
     @Parameter( defaultValue="${env.CODACY_API_BASE_URL}", property = "codacyApiBaseUrl", required = false )
     private String codacyApiBaseUrl;
+    
+    /**
+     * should reporter fail on missing report file
+     */
+    @Parameter(defaultValue = "true", property = "failOnMissingReportFile", required = false)
+    private boolean failOnMissingReportFile;
 
     @Override
     public void execute() throws MojoFailureException, MojoExecutionException {
         if (!coverageReportFile.exists()) {
-            throw new MojoFailureException("Report file does not exist");
+            if (failOnMissingReportFile) {
+                throw new MojoFailureException("Report file does not exist");
+            } else {
+                getLog().warn("Report file does not exist");
+                return;
+            }
         }
 
         /* TODO
@@ -223,5 +234,9 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
     public void setCommit(String commit) {
         this.commit = commit;
+    }
+
+    public void setFailOnMissingReportFile(boolean failOnMissingReportFile) {
+        this.failOnMissingReportFile = failOnMissingReportFile;
     }
 }
