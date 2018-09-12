@@ -11,7 +11,6 @@ where:
 * *coverageReportFile* is either a Jacoco or Cobertura file
 * *projectToken* is your project token
 * *apiToken* is your api token
-*
 
 **Enterprise**
 
