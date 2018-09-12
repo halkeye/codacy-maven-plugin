@@ -8,14 +8,22 @@ import com.codacy.parsers.implementation.CoberturaParser;
 import com.codacy.parsers.implementation.JacocoParser;
 import com.codacy.transformation.PathPrefixer;
 import com.google.common.base.Strings;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import javax.net.ssl.SSLContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -81,12 +89,18 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
      */
     @Parameter( defaultValue="${env.CODACY_API_BASE_URL}", property = "codacyApiBaseUrl", required = false )
     private String codacyApiBaseUrl;
-    
+
     /**
      * should reporter fail on missing report file
      */
     @Parameter(defaultValue = "true", property = "failOnMissingReportFile", required = false)
     private boolean failOnMissingReportFile;
+
+    /**
+     * should reporter trust self signed certificates when uploading the coverage data
+     */
+    @Parameter(defaultValue = "false", property = "codacy.trustSelfSignedCerts", required = false)
+    private boolean trustSelfSignedCerts;
 
     @Override
     public void execute() throws MojoFailureException, MojoExecutionException {
@@ -130,15 +144,13 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
             postReport(report);
             getLog().info("Coverage data uploaded");
         } catch (IOException e) {
-            getLog().error("Failed to upload data.", e);
-            throw new MojoFailureException("Failed to upload data. Reason: " + e.getMessage(), e);
+            getLog().error("Failed to upload coverage data.", e);
+            throw new MojoFailureException("Failed to upload coverage data. Reason: " + e.getMessage(), e);
         }
     }
 
     public String postReport(CoverageReport report) throws IOException {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-
-        try {
+        try (CloseableHttpClient httpclient = createHttpClient()) {
             HttpPost httppost = new HttpPost(codacyApiBaseUrl + "/2.0/coverage/" + commit + "/" + language.toLowerCase());
             httppost.setHeader("api_token", apiToken);
             httppost.setHeader("project_token", projectToken);
@@ -166,12 +178,24 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
             };
             return httpclient.execute(httppost, responseHandler);
-        } finally {
-            try {
-                httpclient.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        }
+    }
+
+    private CloseableHttpClient createHttpClient() throws IOException {
+        HttpClientBuilder builder = HttpClients.custom();
+        if (trustSelfSignedCerts) {
+            builder.setSSLSocketFactory(new SSLConnectionSocketFactory(createSSLContext()));
+        }
+        return builder.build();
+    }
+
+    private SSLContext createSSLContext() throws IOException {
+        try {
+            return SSLContextBuilder.create()
+                .loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE)
+                .build();
+        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            throw new IOException("Could not create SSL context: " + e.getMessage(), e);
         }
     }
 
@@ -238,5 +262,9 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
 
     public void setFailOnMissingReportFile(boolean failOnMissingReportFile) {
         this.failOnMissingReportFile = failOnMissingReportFile;
+    }
+
+    public void setTrustSelfSignedCerts(boolean trustSelfSignedCerts) {
+        this.trustSelfSignedCerts = trustSelfSignedCerts;
     }
 }
