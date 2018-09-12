@@ -20,6 +20,15 @@ To send coverage in the enterprise version you should:
 export CODACY_API_BASE_URL=<Codacy_instance_URL>:16006
 ```
 
+In case your on-prem codacy server has a self-signed certificate, 
+use `-Dcodacy.trustSelfSignedCerts` in the command line, 
+or configure the plugin in the `pom.xml` using:
+```xml
+<configuration>
+  <trustSelfSignedCerts>true</trustSelfSignedCerts>
+</configuration>
+``` 
+
 ## License
 
 MIT
