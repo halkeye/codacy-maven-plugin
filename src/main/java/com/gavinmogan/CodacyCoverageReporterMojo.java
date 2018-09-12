@@ -63,7 +63,8 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     private String language;
 
     /**
-     * your project coverage file name
+     * your project commit revision for which to upload the coverage data
+     * (default: the latest commit of the current git branch)
      */
     @Parameter( defaultValue = "${env.CI_COMMIT}", property = "commit", required = false )
     private String commit;
