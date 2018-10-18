@@ -3,7 +3,7 @@
 
     <groupId>com.gavinmogan</groupId>
     <artifactId>codacy-maven-plugin</artifactId>
-    <version>1.0.4-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>codacy-maven-plugin Maven Plugin</name>
