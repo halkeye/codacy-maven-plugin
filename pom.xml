@@ -38,8 +38,8 @@
         <url>https://github.com/halkeye/codacy-maven-plugin/issue</url>
     </issueManagement>
     <ciManagement>
-        <system>travisci</system>
-        <url>https://travis-ci.org/halkeye/codacy-maven-plugin</url>
+        <system>jenkins</system>
+        <url>https://jenkins.gavinmogan.com/job/github_projects/job/halkeye_codacy-maven-plugin/job/master</url>
     </ciManagement>
 
     <developers>
