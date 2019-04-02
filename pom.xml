@@ -142,12 +142,12 @@
         <dependency>
             <groupId>com.codacy</groupId>
             <artifactId>coverage-parser_2.11</artifactId>
-            <version>1.1.4</version>
+            <version>2.0.14</version>
         </dependency>
         <dependency>
             <groupId>com.codacy</groupId>
             <artifactId>codacy-coverage-reporter</artifactId>
-            <version>1.0.10</version>
+            <version>6.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>

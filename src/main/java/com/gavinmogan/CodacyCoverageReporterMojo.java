@@ -1,17 +1,11 @@
 package com.gavinmogan;
 
 import com.codacy.api.CoverageReport;
-import com.codacy.api.Language;
 import com.codacy.api.helpers.vcs.GitClient;
-import com.codacy.parsers.XMLCoverageParser;
 import com.codacy.parsers.implementation.CoberturaParser;
 import com.codacy.parsers.implementation.JacocoParser;
 import com.codacy.transformation.PathPrefixer;
 import com.google.common.base.Strings;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import javax.net.ssl.SSLContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -32,12 +26,15 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import play.api.libs.json.Json;
-import scala.Enumeration;
+import scala.util.Either;
 
+import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 @Mojo( name = "coverage", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class CodacyCoverageReporterMojo extends AbstractMojo
@@ -127,13 +124,11 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
             codacyApiBaseUrl = "https://api.codacy.com";
         }
 
-        Enumeration.Value lang = Language.withName(language);
-
         getLog().debug("Project token: " + projectToken);
 
         getLog().info("Parsing coverage data... " + coverageReportFile);
 
-        CoverageReport report = processReport(lang, rootProjectDir, coverageReportFile);
+        CoverageReport report = processReport(rootProjectDir, coverageReportFile);
 
         if (!Strings.isNullOrEmpty(prefix)) {
             final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
@@ -157,7 +152,7 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
             httppost.setHeader("project_token", projectToken);
             httppost.setHeader("Content-Type", "application/json");
 
-            final String json = Json.toJson(report, CoverageReport.codacyCoverageReportFmt()).toString();
+            final String json = Json.toJson(report, CoverageReport.coverageReportWrites()).toString();
 
             StringEntity input = new StringEntity(json);
             input.setContentType("application/json");
@@ -203,25 +198,21 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     /**
      * Given a report file, find the parser that works for this
      *
-     * @param language What language is this?
      * @param rootProject Where is the project located
      * @param reportFile Where is the coverage report file
      * @return Completed report, or null if nothing matches
      */
-    public static CoverageReport processReport(Enumeration.Value language, File rootProject, File reportFile) {
+    public static CoverageReport processReport(File rootProject, File reportFile) {
 
         for (Class clazz : parsers) {
             try {
-                Constructor con = clazz.getConstructor(Enumeration.Value.class, File.class, File.class);
-                XMLCoverageParser parser = (XMLCoverageParser) con.newInstance(language, rootProject, reportFile);
+                Either<String, CoverageReport> result = (Either<String, CoverageReport> )
+                    clazz.getMethod("parse", File.class, File.class).invoke(null, rootProject, reportFile);
 
-                if (parser == null) { continue; }
-
-                if (parser.isValidReport()) {
-                    return parser.generateReport();
+                if (result.isRight()) {
+                    return result.right().get();
                 }
             } catch (NoSuchMethodException e) {
-            } catch (InstantiationException e) {
             } catch (IllegalAccessException e) {
             } catch (InvocationTargetException e) {
             }
