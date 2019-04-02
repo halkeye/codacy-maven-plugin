@@ -139,13 +139,13 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
             getLog().info("Uploading coverage data...");
             postReport(report);
             getLog().info("Coverage data uploaded");
-        } catch (IOException e) {
+        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | KeyManagementException e) {
             getLog().error("Failed to upload coverage data.", e);
             throw new MojoFailureException("Failed to upload coverage data. Reason: " + e.getMessage(), e);
         }
     }
 
-    public String postReport(CoverageReport report) throws IOException {
+    public String postReport(CoverageReport report) throws IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
         try (CloseableHttpClient httpclient = createHttpClient()) {
             HttpPost httppost = new HttpPost(codacyApiBaseUrl + "/2.0/coverage/" + commit + "/" + language.toLowerCase());
             httppost.setHeader("api_token", apiToken);
@@ -177,11 +177,16 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
         }
     }
 
-    private CloseableHttpClient createHttpClient() throws IOException {
-        HttpClientBuilder builder = HttpClients.custom();
+    private CloseableHttpClient createHttpClient() throws IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
         if (trustSelfSignedCerts) {
-            builder.setSSLSocketFactory(new SSLConnectionSocketFactory(createSSLContext()));
+            SSLContextBuilder builder = new SSLContextBuilder();
+            builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build());
+            return HttpClients.custom().setSSLSocketFactory(
+                sslsf).build();
         }
+
+        HttpClientBuilder builder = HttpClients.custom();
         return builder.build();
     }
 
