@@ -14,7 +14,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven-api.version>3.3.9</maven-api.version>
+        <maven-api.version>3.6.1</maven-api.version>
         <java.level>7</java.level>
         <github.global.server>github</github.global.server>
     </properties>
