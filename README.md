@@ -46,7 +46,7 @@ or configure the plugin in the `pom.xml` using:
                   <plugin>
                       <groupId>com.gavinmogan</groupId>
                       <artifactId>codacy-maven-plugin</artifactId>
-                      <version>1.0.3</version>
+                      <version>1.2.0</version>
                       <configuration>
                           <apiToken>${env.CODACY_API_TOKEN}</apiToken>
                           <projectToken>${env.CODACY_PROJECT_TOKEN}</projectToken>
