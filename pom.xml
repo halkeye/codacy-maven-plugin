@@ -78,7 +78,7 @@
         <repository>
             <id>typesafe-releases</id>
             <name>Typesafe releases</name>
-            <url>http://repo.typesafe.com/typesafe/releases/</url>
+            <url>https://repo.typesafe.com/typesafe/releases/</url>
         </repository>
     </repositories>
 
