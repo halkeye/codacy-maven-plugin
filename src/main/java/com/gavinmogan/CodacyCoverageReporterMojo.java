@@ -6,11 +6,20 @@ import com.codacy.parsers.implementation.CoberturaParser;
 import com.codacy.parsers.implementation.JacocoParser;
 import com.codacy.transformation.PathPrefixer;
 import com.google.common.base.Strings;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import javax.net.ssl.SSLContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.StringEntity;
@@ -28,64 +37,61 @@ import org.apache.maven.plugins.annotations.Parameter;
 import play.api.libs.json.Json;
 import scala.util.Either;
 
-import javax.net.ssl.SSLContext;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+@Mojo(name = "coverage", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+public class CodacyCoverageReporterMojo extends AbstractMojo {
+    private static Class[] parsers = new Class[]{CoberturaParser.class, JacocoParser.class};
 
-@Mojo( name = "coverage", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
-public class CodacyCoverageReporterMojo extends AbstractMojo
-{
-    private static Class[] parsers = new Class[] { CoberturaParser.class, JacocoParser.class };
+    /**
+     * set to {@code true} if you want coverage upload, otherwise {@code false}.
+     */
+    @Parameter(defaultValue = "false", property = "codacy.skip", required = true)
+    private boolean skip;
 
     /**
      * your project API token
      */
-    @Parameter( defaultValue="${env.CODACY_PROJECT_TOKEN}", property = "projectToken", required = true )
+    @Parameter(defaultValue = "${env.CODACY_PROJECT_TOKEN}", property = "projectToken", required = true)
     private String projectToken;
 
     /**
      * your API token
      */
-    @Parameter( defaultValue="${env.CODACY_API_TOKEN}", property = "apiToken", required = true )
+    @Parameter(defaultValue = "${env.CODACY_API_TOKEN}", property = "apiToken", required = true)
     private String apiToken;
 
     /**
      * your project language
      */
-    @Parameter( defaultValue="Java", property = "language", required = true )
+    @Parameter(defaultValue = "Java", property = "language", required = true)
     private String language;
 
     /**
      * your project commit revision for which to upload the coverage data
      * (default: the latest commit of the current git branch)
      */
-    @Parameter( defaultValue = "${env.CI_COMMIT}", property = "commit", required = false )
+    @Parameter(defaultValue = "${env.CI_COMMIT}", property = "commit", required = false)
     private String commit;
 
     /**
      * your project coverage file name
      */
-    @Parameter( defaultValue="", property = "coverageReportFile", required = true )
+    @Parameter(defaultValue = "", property = "coverageReportFile", required = true)
     private File coverageReportFile;
 
 
-    @Parameter( defaultValue="${project.basedir}", property = "rootProjectDir", required = true )
+    @Parameter(defaultValue = "${project.basedir}", property = "rootProjectDir", required = true)
     private File rootProjectDir;
 
     /**
      * the project path prefix
      */
-    @Parameter( defaultValue="", property = "prefix", required = false )
+    @Parameter(defaultValue = "", property = "prefix", required = false)
     private String prefix;
 
     /**
      * the base URL for the Codacy API
      */
-    @Parameter( defaultValue="${env.CODACY_API_BASE_URL}", property = "codacyApiBaseUrl", required = false )
+    @Parameter(defaultValue = "${env.CODACY_API_BASE_URL}", property = "codacyApiBaseUrl", required = false)
     private String codacyApiBaseUrl;
 
     /**
@@ -95,59 +101,70 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
     private boolean failOnMissingReportFile;
 
     /**
+     * is coverage partial
+     */
+    @Parameter(defaultValue = "false", property = "partial", required = false)
+    private boolean partial;
+
+    /**
      * should reporter trust self signed certificates when uploading the coverage data
      */
     @Parameter(defaultValue = "false", property = "codacy.trustSelfSignedCerts", required = false)
     private boolean trustSelfSignedCerts;
 
     @Override
-    public void execute() throws MojoFailureException, MojoExecutionException {
-        if (!coverageReportFile.exists()) {
-            if (failOnMissingReportFile) {
-                throw new MojoFailureException("Report file does not exist");
-            } else {
-                getLog().warn("Report file does not exist");
-                return;
+    public void execute() throws MojoFailureException {
+        if(!skip) {
+            if (!coverageReportFile.exists()) {
+                if (failOnMissingReportFile) {
+                    throw new MojoFailureException("Report file does not exist");
+                } else {
+                    getLog().warn("Report file does not exist");
+                    return;
+                }
             }
-        }
 
-        /* TODO
-         * loop through ${project.basedir}/target/jacoco/jacoco.xml and ${project.basedir}/target/cobertura/coverage.xml
-         * to see which one is available by default?
-         */
-        if (Strings.isNullOrEmpty(commit)) {
-            GitClient gitClient = new GitClient(rootProjectDir);
-            commit = gitClient.latestCommitUuid().get();
-        }
+            /* TODO
+             * loop through ${project.basedir}/target/jacoco/jacoco.xml and ${project.basedir}/target/cobertura/coverage.xml
+             * to see which one is available by default?
+             */
+            if (Strings.isNullOrEmpty(commit)) {
+                GitClient gitClient = new GitClient(rootProjectDir);
+                commit = gitClient.latestCommitUuid().get();
+            }
 
-        if (Strings.isNullOrEmpty(codacyApiBaseUrl)) {
-            codacyApiBaseUrl = "https://api.codacy.com";
-        }
+            if (Strings.isNullOrEmpty(codacyApiBaseUrl)) {
+                codacyApiBaseUrl = "https://api.codacy.com";
+            }
 
-        getLog().debug("Project token: " + projectToken);
+            getLog().debug("Project token: " + projectToken);
 
-        getLog().info("Parsing coverage data... " + coverageReportFile);
+            getLog().info("Parsing coverage data... " + coverageReportFile);
 
-        CoverageReport report = processReport(rootProjectDir, coverageReportFile);
+            CoverageReport report = processReport(rootProjectDir, coverageReportFile);
 
-        if (!Strings.isNullOrEmpty(prefix)) {
-            final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
-            report = pathPrefixer.execute(report);
-        }
+            if (!Strings.isNullOrEmpty(prefix)) {
+                final PathPrefixer pathPrefixer = new PathPrefixer(prefix);
+                report = pathPrefixer.execute(report);
+            }
 
-        try {
-            getLog().info("Uploading coverage data...");
-            postReport(report);
-            getLog().info("Coverage data uploaded");
-        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | KeyManagementException e) {
-            getLog().error("Failed to upload coverage data.", e);
-            throw new MojoFailureException("Failed to upload coverage data. Reason: " + e.getMessage(), e);
+            try {
+                getLog().info("Uploading coverage data...");
+                postReport(report);
+                getLog().info("Coverage data uploaded");
+            } catch (IOException | KeyStoreException | NoSuchAlgorithmException | KeyManagementException | URISyntaxException e) {
+                getLog().error("Failed to upload coverage data.", e);
+                throw new MojoFailureException("Failed to upload coverage data. Reason: " + e.getMessage(), e);
+            }
         }
     }
 
-    public String postReport(CoverageReport report) throws IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+    public String postReport(CoverageReport report) throws IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException, URISyntaxException {
         try (CloseableHttpClient httpclient = createHttpClient()) {
-            HttpPost httppost = new HttpPost(codacyApiBaseUrl + "/2.0/coverage/" + commit + "/" + language.toLowerCase());
+            URIBuilder builder = new URIBuilder(codacyApiBaseUrl + "/2.0/coverage/" + commit + "/" + language.toLowerCase());
+            builder.setParameter("partial", String.valueOf(partial));
+
+            HttpPost httppost = new HttpPost(builder.build());
             httppost.setHeader("api_token", apiToken);
             httppost.setHeader("project_token", projectToken);
             httppost.setHeader("Content-Type", "application/json");
@@ -204,14 +221,14 @@ public class CodacyCoverageReporterMojo extends AbstractMojo
      * Given a report file, find the parser that works for this
      *
      * @param rootProject Where is the project located
-     * @param reportFile Where is the coverage report file
+     * @param reportFile  Where is the coverage report file
      * @return Completed report, or null if nothing matches
      */
     public static CoverageReport processReport(File rootProject, File reportFile) {
 
         for (Class clazz : parsers) {
             try {
-                Either<String, CoverageReport> result = (Either<String, CoverageReport> )
+                Either<String, CoverageReport> result = (Either<String, CoverageReport>)
                     clazz.getMethod("parse", File.class, File.class).invoke(null, rootProject, reportFile);
 
                 if (result.isRight()) {

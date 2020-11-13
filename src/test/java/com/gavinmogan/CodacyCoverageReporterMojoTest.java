@@ -115,6 +115,7 @@ public class CodacyCoverageReporterMojoTest {
                         request()
                                 .withMethod("POST")
                                 .withPath("/2.0/coverage/" + commit + "/java")
+                                .withQueryStringParameter("partial", "false")
                                 .withHeaders(
                                         header("content-type", "application/json"),
                                         header("api_token", "FAKE_API_TOKEN"),
